@@ -8,7 +8,7 @@ Analiz motoru T-SQL'i metin olarak ayiklamak yerine `Microsoft.SqlServer.Transac
 
 - `src/SpLineageAnalyzer`: Console uygulamasi ve analiz motoru.
 - `src/SpLineageAnalyzer/Analysis`: ScriptDom parser, SELECT analizi, alias scope, kaynak kolon ve operasyon toplama kodlari.
-- `src/SpLineageAnalyzer/Output`: Markdown cikti formatlayici.
+- `src/SpLineageAnalyzer/Output`: JSON, Excel ve okunabilir console raporu formatlayicilari.
 - `tests/SpLineageAnalyzer.Tests`: Ornek SP uzerinden beklenen lineage davranisini dogrulayan testler.
 - `sp/`: Analiz edilecek stored procedure dosyalari. Su an ornek olarak `rpt_LoanRediscountAdvanceInterim.sql` bulunur.
 - `global.json`: Projenin .NET 8 SDK ile calismasini sabitler.
@@ -67,13 +67,13 @@ Belirli bir dizindeki tum SQL dosyalarini analiz etmek icin:
 dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp
 ```
 
-Markdown cikti almak icin:
+Excel cikti almak icin:
 
 ```bash
-dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format markdown
+dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format excel
 ```
 
-JSON ve Markdown ciktiyi birlikte almak icin:
+JSON ve Excel ciktiyi birlikte almak icin:
 
 ```bash
 dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format both
@@ -82,27 +82,28 @@ dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input s
 Sonuclari bir dizine yazmak icin:
 
 ```bash
-dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format both --output output
+dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --server vkdb --format both --output output
 ```
 
 Bu komut su dosyalari uretir ve ayni analiz sonucunu terminalde okunabilir rapor olarak da gosterir:
 
 ```text
 output/lineage.json
-output/lineage.md
+output/lineage.xlsx
 ```
 
 Sadece dosya uretip terminalde okunabilir raporu kapatmak icin:
 
 ```bash
-dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format both --output output --no-console
+dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --server vkdb --format both --output output --no-console
 ```
 
 ## CLI Parametreleri
 
 ```text
 --input <file-or-dir>       Analiz edilecek SQL dosyasi veya dizin. Varsayilan: sp
---format json|markdown|both Cikti formati. Varsayilan: json
+--server <server-name>      Varsayilan server adi. Varsayilan: vkdb
+--format json|excel|both    Cikti formati. Varsayilan: json
 --output <file-or-dir>      Cikti yolu. Verilmezse terminale yazar.
 --no-console                Okunabilir console raporunu kapatir.
 --help                      Yardim metnini gosterir.
@@ -110,11 +111,11 @@ dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input s
 
 ## Cikti Icerigi
 
-JSON, Markdown ve console raporunda her procedure icin output kolonlari merge edilmis olarak listelenir. Her kolon icin su bilgiler bulunur:
+JSON, Excel ve console raporunda her procedure icin output kolonlari merge edilmis olarak listelenir. Her kolon icin su bilgiler bulunur:
 
 - Output kolon adi
 - Kolonu ureten SQL formulu
-- Kaynak alias, tablo ve kolonlar
+- Kaynak alias, server, database, schema, table ve kolonlar
 - `CASE`, `ISNULL`, `Subtract`, `MAX` gibi operasyonlar
 - IF/ELSE gibi farkli SELECT dallarinda kolonun hangi branch'ten geldigine dair bilgi
 - `OUTER APPLY` veya derived table ile uretilen kolonlarda alt formuller ve turetilmis kaynaklar

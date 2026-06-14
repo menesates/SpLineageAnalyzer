@@ -4,7 +4,7 @@ namespace SpLineageAnalyzer.Analysis;
 
 public sealed class StoredProcedureAnalyzer
 {
-    public SqlFileAnalysis Analyze(string file, string sql)
+    public SqlFileAnalysis Analyze(string file, string sql, string defaultServer = "vkdb")
     {
         var diagnostics = new List<AnalysisDiagnostic>();
         var normalizedSql = SqlTextNormalizer.Normalize(sql);
@@ -18,14 +18,14 @@ public sealed class StoredProcedureAnalyzer
                 new AnalysisDiagnostic("Error", error.Message, error.Line, error.Column)));
         }
 
-        var visitor = new ProcedureVisitor(normalizedSql);
+        var visitor = new ProcedureVisitor(normalizedSql, defaultServer);
         fragment.Accept(visitor);
 
         diagnostics.AddRange(visitor.Diagnostics);
         return new SqlFileAnalysis(Path.GetFullPath(file), visitor.Procedures, diagnostics);
     }
 
-    private sealed class ProcedureVisitor(string sql) : TSqlFragmentVisitor
+    private sealed class ProcedureVisitor(string sql, string defaultServer) : TSqlFragmentVisitor
     {
         private readonly List<ProcedureAnalysis> _procedures = [];
         private readonly List<AnalysisDiagnostic> _diagnostics = [];
@@ -43,7 +43,7 @@ public sealed class StoredProcedureAnalyzer
             node.StatementList?.Accept(collector);
 
             var occurrences = new List<ColumnOccurrence>();
-            var selectAnalyzer = new SelectAnalyzer(sql);
+            var selectAnalyzer = new SelectAnalyzer(sql, defaultServer);
             foreach (var selectStatement in collector.SelectStatements)
             {
                 try
@@ -92,7 +92,7 @@ public sealed class StoredProcedureAnalyzer
 
         private static IReadOnlyList<SourceReference> MergeSources(IEnumerable<SourceReference> sources) =>
             sources
-                .GroupBy(source => $"{source.Alias}|{source.Table}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
+                .GroupBy(source => $"{source.Alias}|{source.ObjectName}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
                 .Select(group =>
                 {
                     var first = group.First();

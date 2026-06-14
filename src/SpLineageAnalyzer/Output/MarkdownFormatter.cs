@@ -39,7 +39,7 @@ public static class MarkdownFormatter
 
     private static string FormatSource(SourceReference source)
     {
-        var table = source.Table ?? "?";
+        var table = source.ObjectName ?? "?";
         var unresolved = source.Unresolved ? " unresolved" : string.Empty;
         var derived = string.IsNullOrWhiteSpace(source.Formula) ? string.Empty : $" <= {source.Formula}";
         return $"{source.Alias}.{source.Column} [{table}]{unresolved}{derived}";

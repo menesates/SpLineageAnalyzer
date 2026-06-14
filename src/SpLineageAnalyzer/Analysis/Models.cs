@@ -26,7 +26,12 @@ public sealed record BranchColumnAnalysis(
 
 public sealed record SourceReference(
     string Alias,
+    string? ObjectName,
+    string? Server,
+    string? Database,
+    string? Schema,
     string? Table,
+    string SourceKind,
     string Column,
     bool Unresolved,
     string? Formula,
@@ -44,9 +49,19 @@ internal sealed record ColumnOccurrence(
 
 internal sealed record TableSource(
     string Alias,
-    string? Table,
+    SqlObjectName ObjectName,
     IReadOnlyDictionary<string, DerivedColumn> DerivedColumns,
     string SourceKind = "Table");
+
+internal sealed record SqlObjectName(
+    string? DisplayName,
+    string? Server,
+    string? Database,
+    string? Schema,
+    string? Table)
+{
+    public static SqlObjectName Unknown { get; } = new(null, null, null, null, null);
+}
 
 internal sealed record DerivedColumn(
     string Name,

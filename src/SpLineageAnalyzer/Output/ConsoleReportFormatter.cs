@@ -73,7 +73,7 @@ public static class ConsoleReportFormatter
         foreach (var source in sources)
         {
             var unresolved = source.Unresolved ? " [UNRESOLVED]" : string.Empty;
-            var target = string.IsNullOrWhiteSpace(source.Table) ? "unknown source" : source.Table;
+            var target = FormatTarget(source);
             yield return $"{prefix}- {FormatAliasColumn(source)} -> {target}{unresolved}";
 
             if (!string.IsNullOrWhiteSpace(source.Formula))
@@ -96,5 +96,15 @@ public static class ConsoleReportFormatter
         }
 
         return $"{source.Alias}.{source.Column}";
+    }
+
+    private static string FormatTarget(SourceReference source)
+    {
+        if (source.SourceKind is "CTE" or "Derived")
+        {
+            return source.ObjectName ?? source.SourceKind;
+        }
+
+        return source.ObjectName ?? "unknown source";
     }
 }

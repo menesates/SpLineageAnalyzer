@@ -13,7 +13,7 @@ internal sealed class SourceCollector(IReadOnlyDictionary<string, TableSource> s
         var visitor = new SourceCollector(scope);
         expression.Accept(visitor);
         return visitor._sources
-            .GroupBy(source => $"{source.Alias}|{source.Table}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
+            .GroupBy(source => $"{source.Alias}|{source.ObjectName}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .OrderBy(source => source.Alias, StringComparer.OrdinalIgnoreCase)
             .ThenBy(source => source.Column, StringComparer.OrdinalIgnoreCase)
@@ -40,13 +40,7 @@ internal sealed class SourceCollector(IReadOnlyDictionary<string, TableSource> s
                 return;
             }
 
-            _sources.Add(new SourceReference(
-                "",
-                null,
-                parts[0],
-                true,
-                null,
-                Array.Empty<SourceReference>()));
+            _sources.Add(CreateReference("", SqlObjectName.Unknown, "Unknown", parts[0], true, null, Array.Empty<SourceReference>()));
             return;
         }
 
@@ -54,36 +48,39 @@ internal sealed class SourceCollector(IReadOnlyDictionary<string, TableSource> s
         var column = parts[^1];
         if (!scope.TryGetValue(alias, out var tableSource))
         {
-            _sources.Add(new SourceReference(
-                alias,
-                null,
-                column,
-                true,
-                null,
-                Array.Empty<SourceReference>()));
+            _sources.Add(CreateReference(alias, SqlObjectName.Unknown, "Unknown", column, true, null, Array.Empty<SourceReference>()));
             return;
         }
 
         if (tableSource.DerivedColumns.TryGetValue(column, out var derivedColumn))
         {
-            _sources.Add(new SourceReference(
-                alias,
-                tableSource.Table,
-                column,
-                false,
-                derivedColumn.Formula,
-                derivedColumn.Sources));
+            _sources.Add(CreateReference(alias, tableSource.ObjectName, tableSource.SourceKind, column, false, derivedColumn.Formula, derivedColumn.Sources));
             return;
         }
 
-        _sources.Add(new SourceReference(
-            alias,
-            tableSource.Table,
-            column,
-            false,
-            null,
-            Array.Empty<SourceReference>()));
+        _sources.Add(CreateReference(alias, tableSource.ObjectName, tableSource.SourceKind, column, false, null, Array.Empty<SourceReference>()));
     }
+
+    private static SourceReference CreateReference(
+        string alias,
+        SqlObjectName objectName,
+        string sourceKind,
+        string column,
+        bool unresolved,
+        string? formula,
+        IReadOnlyList<SourceReference> derivedSources) =>
+        new(
+            alias,
+            objectName.DisplayName,
+            objectName.Server,
+            objectName.Database,
+            objectName.Schema,
+            objectName.Table,
+            sourceKind,
+            column,
+            unresolved,
+            formula,
+            derivedSources);
 
     private static bool IsDatePart(string value) =>
         value.Equals("YEAR", StringComparison.OrdinalIgnoreCase) ||

@@ -2,14 +2,24 @@ using System.Text.Json;
 using SpLineageAnalyzer.Analysis;
 using SpLineageAnalyzer.Output;
 
-var options = CliOptions.Parse(args);
+CliOptions options;
+try
+{
+    options = CliOptions.Parse(args);
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return 2;
+}
+
 var analyzer = new StoredProcedureAnalyzer();
 
 var analyses = new List<SqlFileAnalysis>();
 foreach (var file in ResolveInputFiles(options.InputPath))
 {
     var sql = await File.ReadAllTextAsync(file);
-    analyses.Add(analyzer.Analyze(file, sql));
+    analyses.Add(analyzer.Analyze(file, sql, options.DefaultServer));
 }
 
 var jsonOptions = new JsonSerializerOptions
@@ -19,10 +29,10 @@ var jsonOptions = new JsonSerializerOptions
 };
 
 var emitJson = options.Format is OutputFormat.Json or OutputFormat.Both;
-var emitMarkdown = options.Format is OutputFormat.Markdown or OutputFormat.Both;
+var emitExcel = options.Format is OutputFormat.Excel or OutputFormat.Both;
 var json = emitJson ? JsonSerializer.Serialize(analyses, jsonOptions) : null;
-var markdown = emitMarkdown ? MarkdownFormatter.Format(analyses) : null;
 var consoleReport = options.NoConsole ? null : ConsoleReportFormatter.Format(analyses);
+var excelPath = emitExcel ? ResolveExcelOutputPath(options.OutputPath) : null;
 
 if (string.IsNullOrWhiteSpace(options.OutputPath))
 {
@@ -30,31 +40,28 @@ if (string.IsNullOrWhiteSpace(options.OutputPath))
     {
         Console.WriteLine(json);
     }
-
-    if (markdown is not null)
-    {
-        if (json is not null)
-        {
-            Console.WriteLine();
-        }
-
-        Console.WriteLine(markdown);
-    }
 }
 else
 {
-    WriteOutput(options, json, markdown);
+    WriteJsonOutput(options, json);
+}
+
+if (excelPath is not null)
+{
+    ExcelFormatter.Save(analyses, excelPath);
 }
 
 if (consoleReport is not null)
 {
-    if (string.IsNullOrWhiteSpace(options.OutputPath) && (json is not null || markdown is not null))
+    if (string.IsNullOrWhiteSpace(options.OutputPath) && json is not null)
     {
         Console.WriteLine();
     }
 
     Console.WriteLine(consoleReport);
 }
+
+return 0;
 
 static IReadOnlyList<string> ResolveInputFiles(string inputPath)
 {
@@ -74,29 +81,40 @@ static IReadOnlyList<string> ResolveInputFiles(string inputPath)
         .ToArray();
 }
 
-static void WriteOutput(CliOptions options, string? json, string? markdown)
+static string ResolveExcelOutputPath(string? outputPath)
 {
+    if (string.IsNullOrWhiteSpace(outputPath))
+    {
+        return Path.Combine("output", "lineage.xlsx");
+    }
+
+    if (Directory.Exists(outputPath) || !Path.HasExtension(outputPath))
+    {
+        return Path.Combine(outputPath, "lineage.xlsx");
+    }
+
+    return outputPath;
+}
+
+static void WriteJsonOutput(CliOptions options, string? json)
+{
+    if (json is null)
+    {
+        return;
+    }
+
     var outputPath = options.OutputPath ?? throw new InvalidOperationException("Output path is required.");
     if (Directory.Exists(outputPath) || options.Format == OutputFormat.Both)
     {
         Directory.CreateDirectory(outputPath);
-        if (json is not null)
-        {
-            File.WriteAllText(Path.Combine(outputPath, "lineage.json"), json);
-        }
-
-        if (markdown is not null)
-        {
-            File.WriteAllText(Path.Combine(outputPath, "lineage.md"), markdown);
-        }
-
+        File.WriteAllText(Path.Combine(outputPath, "lineage.json"), json);
         return;
     }
 
-    File.WriteAllText(outputPath, json ?? markdown ?? string.Empty);
+    File.WriteAllText(outputPath, json);
 }
 
-internal sealed record CliOptions(string InputPath, OutputFormat Format, string? OutputPath, bool NoConsole)
+internal sealed record CliOptions(string InputPath, OutputFormat Format, string? OutputPath, bool NoConsole, string DefaultServer)
 {
     public static CliOptions Parse(string[] args)
     {
@@ -104,6 +122,7 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
         var format = OutputFormat.Json;
         string? output = null;
         var noConsole = false;
+        var defaultServer = "vkdb";
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -121,6 +140,9 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
                 case "--no-console":
                     noConsole = true;
                     break;
+                case "--server":
+                    defaultServer = RequireValue(args, ref i, "--server");
+                    break;
                 case "--help":
                 case "-h":
                     PrintHelpAndExit();
@@ -130,7 +152,7 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
             }
         }
 
-        return new CliOptions(input, format, output, noConsole);
+        return new CliOptions(input, format, output, noConsole, defaultServer);
     }
 
     private static string RequireValue(string[] args, ref int index, string name)
@@ -148,14 +170,14 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
         value.ToLowerInvariant() switch
         {
             "json" => OutputFormat.Json,
-            "markdown" => OutputFormat.Markdown,
+            "excel" => OutputFormat.Excel,
             "both" => OutputFormat.Both,
-            _ => throw new ArgumentException("--format must be json, markdown, or both.")
+            _ => throw new ArgumentException("--format must be json, excel, or both.")
         };
 
     private static void PrintHelpAndExit()
     {
-        Console.WriteLine("Usage: SpLineageAnalyzer [--input <file-or-dir>] [--format json|markdown|both] [--output <file-or-dir>] [--no-console]");
+        Console.WriteLine("Usage: SpLineageAnalyzer [--input <file-or-dir>] [--server <name>] [--format json|excel|both] [--output <file-or-dir>] [--no-console]");
         Environment.Exit(0);
     }
 }
@@ -163,6 +185,6 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
 internal enum OutputFormat
 {
     Json,
-    Markdown,
+    Excel,
     Both
 }

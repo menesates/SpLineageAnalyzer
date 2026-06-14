@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using SpLineageAnalyzer.Analysis;
 using SpLineageAnalyzer.Output;
 using Xunit;
@@ -26,7 +27,11 @@ public sealed class StoredProcedureAnalyzerTests
         var tranBranchName = Column(procedure, "TranBranchName");
         Assert.Contains(tranBranchName.Sources, source =>
             source.Alias == "b" &&
-            source.Table == "BOA.COR.Branch" &&
+            source.ObjectName == "vkdb.BOA.COR.Branch" &&
+            source.Server == "vkdb" &&
+            source.Database == "BOA" &&
+            source.Schema == "COR" &&
+            source.Table == "Branch" &&
             source.Column == "Name" &&
             !source.Unresolved);
 
@@ -45,11 +50,11 @@ public sealed class StoredProcedureAnalyzerTests
         Assert.Contains(dailyRediscount.Operations, operation => operation == "Subtract");
         Assert.Contains(dailyRediscount.Sources, source =>
             source.Alias == "lra" &&
-            source.Table == "BOA.LNS.LoanRediscountAdvanceInterim" &&
+            source.ObjectName == "vkdb.BOA.LNS.LoanRediscountAdvanceInterim" &&
             source.Column == "RediscountAmount");
         Assert.Contains(dailyRediscount.Sources, source =>
             source.Alias == "lr" &&
-            source.Table == "BOA.LNS.LoanRediscountAdvanceInterim" &&
+            source.ObjectName == "vkdb.BOA.LNS.LoanRediscountAdvanceInterim" &&
             source.Column == "RediscountAmount");
     }
 
@@ -62,22 +67,68 @@ public sealed class StoredProcedureAnalyzerTests
         Assert.Contains(rediscount5.Operations, operation => operation == "CASE");
         Assert.Contains(rediscount5.Sources, source =>
             source.Alias == "p" &&
-            source.Table == "boa.lns.Project" &&
+            source.ObjectName == "vkdb.boa.lns.Project" &&
             source.Column == "AgreementType");
 
         var mtx = Assert.Single(rediscount5.Sources, source => source.Alias == "mtx" && source.Column == "Rediscount5");
         Assert.Contains("MAX(CASE WHEN ma.ColumnNo = 1 THEN ma.LedgerId ELSE 0 END)", mtx.Formula);
         Assert.Contains(mtx.DerivedSources, source =>
             source.Alias == "ma" &&
-            source.Table == "boa.acc.MatrixAccounts" &&
+            source.ObjectName == "vkdb.boa.acc.MatrixAccounts" &&
             source.Column == "LedgerId");
 
         var mtxl = Assert.Single(rediscount5.Sources, source => source.Alias == "mtxl" && source.Column == "Rediscount5");
         Assert.Contains("MAX(CASE WHEN ma.ColumnNo = 10 THEN ma.LedgerId ELSE 0 END)", mtxl.Formula);
         Assert.Contains(mtxl.DerivedSources, source =>
             source.Alias == "ma" &&
-            source.Table == "boa.acc.MatrixAccounts" &&
+            source.ObjectName == "vkdb.boa.acc.MatrixAccounts" &&
             source.Column == "ColumnNo");
+    }
+
+    [Fact]
+    public void Analyze_ResolvesServerDatabaseSchemaAndTableParts()
+    {
+        const string sql = """
+            ALTER PROCEDURE [RPT].[rpt_LinkedServerSmoke]
+            AS
+            BEGIN
+                SELECT
+                    lim.PositionLimitAmount,
+                    sw.FarAmount,
+                    rb.TotalExposureTL
+                FROM BOA.TRE.PositionLimit lim
+                    INNER JOIN LINK01.BOA.TRE.FxSwapDeal sw ON sw.DeskCode = lim.DeskCode
+                    INNER JOIN #RiskBucket rb ON rb.CurrencyCode = sw.FarCurrencyCode
+            END
+            """;
+
+        var analysis = new StoredProcedureAnalyzer().Analyze("inline.sql", sql, "vkdb");
+        Assert.Empty(analysis.Diagnostics);
+        var procedure = Assert.Single(analysis.Procedures);
+
+        var positionLimit = Column(procedure, "PositionLimitAmount");
+        Assert.Contains(positionLimit.Sources, source =>
+            source.Alias == "lim" &&
+            source.Server == "vkdb" &&
+            source.Database == "BOA" &&
+            source.Schema == "TRE" &&
+            source.Table == "PositionLimit");
+
+        var farAmount = Column(procedure, "FarAmount");
+        Assert.Contains(farAmount.Sources, source =>
+            source.Alias == "sw" &&
+            source.Server == "LINK01" &&
+            source.Database == "BOA" &&
+            source.Schema == "TRE" &&
+            source.Table == "FxSwapDeal");
+
+        var totalExposure = Column(procedure, "TotalExposureTL");
+        Assert.Contains(totalExposure.Sources, source =>
+            source.Alias == "rb" &&
+            source.Server == "vkdb" &&
+            source.Database == "tempdb" &&
+            source.Schema is null &&
+            source.Table == "#RiskBucket");
     }
 
     [Fact]
@@ -117,6 +168,22 @@ public sealed class StoredProcedureAnalyzerTests
         Assert.Contains("Operations:", report);
         Assert.Contains("pb.CurrentPositionAmount -> CTE: PositionBase", report);
         Assert.Contains("af.TotalForwardCashFlow -> CTE: AggregatedFlow", report);
+    }
+
+    [Fact]
+    public void ExcelFormatter_WritesExpectedWorkbookSheets()
+    {
+        var analysis = AnalyzeFile("rpt_TreasuryFxLiquidityComplex.sql");
+        var output = Path.Combine(Path.GetTempPath(), $"lineage-{Guid.NewGuid():N}.xlsx");
+
+        ExcelFormatter.Save(new[] { analysis }, output);
+
+        Assert.True(File.Exists(output));
+        using var workbook = new XLWorkbook(output);
+        Assert.Contains("Summary", workbook.Worksheets.Select(sheet => sheet.Name));
+        Assert.Contains("Outputs", workbook.Worksheets.Select(sheet => sheet.Name));
+        Assert.Contains("Sources", workbook.Worksheets.Select(sheet => sheet.Name));
+        Assert.Contains("Diagnostics", workbook.Worksheets.Select(sheet => sheet.Name));
     }
 
     private static ProcedureAnalysis AnalyzeSample()

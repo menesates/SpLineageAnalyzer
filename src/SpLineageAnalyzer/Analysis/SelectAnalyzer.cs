@@ -2,7 +2,7 @@ using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace SpLineageAnalyzer.Analysis;
 
-internal sealed class SelectAnalyzer(string sql)
+internal sealed class SelectAnalyzer(string sql, string defaultServer)
 {
     public IReadOnlyList<ColumnOccurrence> Analyze(SelectStatement statement)
     {
@@ -91,7 +91,7 @@ internal sealed class SelectAnalyzer(string sql)
                 AddTableReference(parenthesizedJoin.Join, scope);
                 break;
             default:
-                var visitor = new FallbackTableReferenceVisitor(sql);
+                var visitor = new FallbackTableReferenceVisitor(sql, defaultServer);
                 reference.Accept(visitor);
                 foreach (var source in visitor.Sources)
                 {
@@ -119,7 +119,7 @@ internal sealed class SelectAnalyzer(string sql)
             }
 
             var columns = BuildDerivedColumns(cte.QueryExpression, scope, cte.Columns.Select(column => column.Value).ToArray());
-            scope[name] = new TableSource(name, $"CTE: {name}", columns, "CTE");
+            scope[name] = new TableSource(name, SqlObjectNameParser.ForCte(name), columns, "CTE");
         }
 
         return scope;
@@ -127,7 +127,9 @@ internal sealed class SelectAnalyzer(string sql)
 
     private void AddNamedTable(NamedTableReference named, Dictionary<string, TableSource> scope)
     {
-        var tableName = SqlName.Format(named.SchemaObject);
+        var rawTableName = SqlName.Format(named.SchemaObject);
+        var objectName = SqlObjectNameParser.FromSchemaObject(named.SchemaObject, defaultServer);
+        var tableName = objectName.DisplayName;
         var alias = named.Alias?.Value;
         if (string.IsNullOrWhiteSpace(alias))
         {
@@ -136,15 +138,15 @@ internal sealed class SelectAnalyzer(string sql)
 
         if (!string.IsNullOrWhiteSpace(alias))
         {
-            if (!string.IsNullOrWhiteSpace(tableName) &&
-                scope.TryGetValue(tableName, out var scopedSource) &&
+            if (!string.IsNullOrWhiteSpace(rawTableName) &&
+                scope.TryGetValue(rawTableName, out var scopedSource) &&
                 scopedSource.SourceKind is "CTE")
             {
                 scope[alias] = scopedSource with { Alias = alias };
                 return;
             }
 
-            scope[alias] = new TableSource(alias, tableName, new Dictionary<string, DerivedColumn>(StringComparer.OrdinalIgnoreCase));
+            scope[alias] = new TableSource(alias, objectName, new Dictionary<string, DerivedColumn>(StringComparer.OrdinalIgnoreCase));
         }
     }
 
@@ -157,7 +159,7 @@ internal sealed class SelectAnalyzer(string sql)
         }
 
         var columns = BuildDerivedColumns(derived.QueryExpression, scope);
-        scope[alias] = new TableSource(alias, $"Derived: {alias}", columns, "Derived");
+        scope[alias] = new TableSource(alias, SqlObjectNameParser.ForDerived(alias), columns, "Derived");
     }
 
     private IReadOnlyDictionary<string, DerivedColumn> BuildDerivedColumns(
@@ -261,7 +263,7 @@ internal sealed class SelectAnalyzer(string sql)
 
     private static IReadOnlyList<SourceReference> MergeSources(IEnumerable<SourceReference> sources) =>
         sources
-            .GroupBy(source => $"{source.Alias}|{source.Table}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
+            .GroupBy(source => $"{source.Alias}|{source.ObjectName}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
             .Select(group =>
             {
                 var first = group.First();
@@ -297,7 +299,7 @@ internal sealed class SelectAnalyzer(string sql)
         return $"Expression{ordinal}";
     }
 
-    private sealed class FallbackTableReferenceVisitor(string sqlText) : TSqlFragmentVisitor
+    private sealed class FallbackTableReferenceVisitor(string sqlText, string fallbackServer) : TSqlFragmentVisitor
     {
         private readonly Dictionary<string, TableSource> _sources = new(StringComparer.OrdinalIgnoreCase);
 
@@ -305,13 +307,13 @@ internal sealed class SelectAnalyzer(string sql)
 
         public override void ExplicitVisit(NamedTableReference node)
         {
-            var analyzer = new SelectAnalyzer(sqlText);
+            var analyzer = new SelectAnalyzer(sqlText, fallbackServer);
             analyzer.AddNamedTable(node, _sources);
         }
 
         public override void ExplicitVisit(QueryDerivedTable node)
         {
-            var analyzer = new SelectAnalyzer(sqlText);
+            var analyzer = new SelectAnalyzer(sqlText, fallbackServer);
             analyzer.AddDerivedTable(node, _sources);
         }
     }
