@@ -39,48 +39,55 @@ public sealed class StoredProcedureAnalyzer
 
         private void AnalyzeProcedure(ProcedureStatementBodyBase node, SchemaObjectName? name)
         {
-            var collector = new StatementSelectCollector();
-            node.StatementList?.Accept(collector);
-
             var occurrences = new List<ColumnOccurrence>();
             var selectAnalyzer = new SelectAnalyzer(sql, defaultServer);
-            foreach (var selectStatement in collector.SelectStatements)
-            {
-                try
-                {
-                    occurrences.AddRange(selectAnalyzer.Analyze(selectStatement));
-                }
-                catch (Exception ex)
-                {
-                    _diagnostics.Add(new AnalysisDiagnostic(
-                        "Warning",
-                        $"Could not analyze SELECT at line {selectStatement.StartLine}: {ex.Message}",
-                        selectStatement.StartLine,
-                        selectStatement.StartColumn));
-                }
-            }
+            var processor = new ProcedureStatementProcessor(selectAnalyzer, _diagnostics);
+            processor.Process(node.StatementList);
+            occurrences.AddRange(processor.OutputOccurrences);
 
-            var columns = occurrences
-                .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(group => new OutputColumnAnalysis(
-                    group.Key,
-                    Distinct(group.Select(item => item.Formula)),
-                    MergeSources(group.SelectMany(item => item.Sources)),
-                    Distinct(group.SelectMany(item => item.Operations)),
-                    group.Select(item => new BranchColumnAnalysis(
-                            item.Branch,
-                            item.Line,
-                            item.Formula,
-                            item.Sources,
-                            item.Operations))
-                        .ToArray()))
-                .OrderBy(column => column.Name, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            var columns = MergeColumns(occurrences);
 
             _procedures.Add(new ProcedureAnalysis(
                 SqlName.Format(name) ?? "<anonymous-procedure>",
                 columns,
                 Array.Empty<AnalysisDiagnostic>()));
+        }
+
+        private static IReadOnlyList<OutputColumnAnalysis> MergeColumns(IReadOnlyList<ColumnOccurrence> occurrences)
+        {
+            var grouped = new Dictionary<string, List<ColumnOccurrence>>(StringComparer.OrdinalIgnoreCase);
+            var order = new List<string>();
+
+            foreach (var occurrence in occurrences)
+            {
+                if (!grouped.TryGetValue(occurrence.Name, out var group))
+                {
+                    group = [];
+                    grouped[occurrence.Name] = group;
+                    order.Add(occurrence.Name);
+                }
+
+                group.Add(occurrence);
+            }
+
+            return order
+                .Select(name =>
+                {
+                    var group = grouped[name];
+                    return new OutputColumnAnalysis(
+                        name,
+                        Distinct(group.Select(item => item.Formula)),
+                        MergeSources(group.SelectMany(item => item.Sources)),
+                        Distinct(group.SelectMany(item => item.Operations)),
+                        group.Select(item => new BranchColumnAnalysis(
+                                item.Branch,
+                                item.Line,
+                                item.Formula,
+                                item.Sources,
+                                item.Operations))
+                            .ToArray());
+                })
+                .ToArray();
         }
 
         private static IReadOnlyList<string> Distinct(IEnumerable<string> values) =>
@@ -106,15 +113,179 @@ public sealed class StoredProcedureAnalyzer
                 .ToArray();
     }
 
-    private sealed class StatementSelectCollector : TSqlFragmentVisitor
+    private sealed class ProcedureStatementProcessor(
+        SelectAnalyzer selectAnalyzer,
+        List<AnalysisDiagnostic> diagnostics)
     {
-        private readonly List<SelectStatement> _selectStatements = [];
+        private readonly Dictionary<string, TableSource> _tempSources = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IReadOnlyList<string>> _tempColumns = new(StringComparer.OrdinalIgnoreCase);
+        private readonly List<ColumnOccurrence> _outputOccurrences = [];
 
-        public IReadOnlyList<SelectStatement> SelectStatements => _selectStatements;
+        public IReadOnlyList<ColumnOccurrence> OutputOccurrences => _outputOccurrences;
 
-        public override void ExplicitVisit(SelectStatement node)
+        public void Process(StatementList? statementList)
         {
-            _selectStatements.Add(node);
+            if (statementList is null)
+            {
+                return;
+            }
+
+            foreach (var statement in statementList.Statements)
+            {
+                Process(statement);
+            }
+        }
+
+        private void Process(TSqlStatement? statement)
+        {
+            switch (statement)
+            {
+                case null:
+                    return;
+                case BeginEndBlockStatement block:
+                    Process(block.StatementList);
+                    return;
+                case IfStatement ifStatement:
+                    Process(ifStatement.ThenStatement);
+                    Process(ifStatement.ElseStatement);
+                    return;
+                case WhileStatement whileStatement:
+                    Process(whileStatement.Statement);
+                    return;
+                case TryCatchStatement tryCatch:
+                    Process(tryCatch.TryStatements);
+                    Process(tryCatch.CatchStatements);
+                    return;
+                case CreateTableStatement createTable:
+                    CaptureTempTableSchema(createTable);
+                    return;
+                case InsertStatement insertStatement:
+                    CaptureTempInsert(insertStatement);
+                    return;
+                case UpdateStatement updateStatement:
+                    CaptureTempUpdate(updateStatement);
+                    return;
+                case SelectStatement selectStatement:
+                    CaptureSelect(selectStatement);
+                    return;
+            }
+        }
+
+        private void CaptureSelect(SelectStatement statement)
+        {
+            try
+            {
+                if (statement.Into is not null)
+                {
+                    var source = selectAnalyzer.BuildTempSourceFromSelectInto(statement, _tempSources);
+                    AddTempSource(source);
+                    return;
+                }
+
+                _outputOccurrences.AddRange(selectAnalyzer.Analyze(statement, _tempSources));
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add(new AnalysisDiagnostic(
+                    "Warning",
+                    $"Could not analyze SELECT at line {statement.StartLine}: {ex.Message}",
+                    statement.StartLine,
+                    statement.StartColumn));
+            }
+        }
+
+        private void CaptureTempInsert(InsertStatement statement)
+        {
+            var insert = statement.InsertSpecification;
+            if (insert.InsertSource is not SelectInsertSource { Select: { } select })
+            {
+                return;
+            }
+
+            try
+            {
+                var targetName = TryGetTargetName(insert.Target);
+                var source = selectAnalyzer.BuildTempSourceFromInsert(
+                    insert,
+                    select,
+                    _tempSources,
+                    targetName is not null && _tempColumns.TryGetValue(targetName, out var columns) ? columns : null);
+
+                AddTempSource(source);
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add(new AnalysisDiagnostic(
+                    "Warning",
+                    $"Could not analyze INSERT SELECT at line {statement.StartLine}: {ex.Message}",
+                    statement.StartLine,
+                    statement.StartColumn));
+            }
+        }
+
+        private void CaptureTempUpdate(UpdateStatement statement)
+        {
+            try
+            {
+                var source = selectAnalyzer.BuildTempSourceFromUpdate(statement.UpdateSpecification, _tempSources);
+                AddTempSource(source);
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add(new AnalysisDiagnostic(
+                    "Warning",
+                    $"Could not analyze UPDATE at line {statement.StartLine}: {ex.Message}",
+                    statement.StartLine,
+                    statement.StartColumn));
+            }
+        }
+
+        private void CaptureTempTableSchema(CreateTableStatement statement)
+        {
+            var name = SqlName.Format(statement.SchemaObjectName);
+            if (string.IsNullOrWhiteSpace(name) || !IsTempName(name))
+            {
+                return;
+            }
+
+            var columns = statement.Definition?.ColumnDefinitions
+                .Select(column => column.ColumnIdentifier?.Value)
+                .Where(column => !string.IsNullOrWhiteSpace(column))
+                .Cast<string>()
+                .ToArray();
+
+            if (columns is { Length: > 0 })
+            {
+                _tempColumns[name] = columns;
+            }
+        }
+
+        private void AddTempSource(TableSource? source)
+        {
+            if (source is null || string.IsNullOrWhiteSpace(source.ObjectName.Table))
+            {
+                return;
+            }
+
+            _tempSources[source.ObjectName.Table] = source;
+            _tempSources[source.Alias] = source;
+            _tempColumns[source.ObjectName.Table] = source.DerivedColumns.Keys.ToArray();
+        }
+
+        private static string? TryGetTargetName(TableReference? target)
+        {
+            if (target is NamedTableReference named)
+            {
+                return SqlName.Format(named.SchemaObject);
+            }
+
+            return null;
+        }
+
+        private static bool IsTempName(string name)
+        {
+            var lastPart = name.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).LastOrDefault();
+            return lastPart?.StartsWith('#') == true;
         }
     }
 }

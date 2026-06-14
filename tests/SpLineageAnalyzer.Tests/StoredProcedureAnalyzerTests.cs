@@ -153,6 +153,60 @@ public sealed class StoredProcedureAnalyzerTests
     }
 
     [Fact]
+    public void Analyze_BranchKpiIgnoresSelectIntoAndKeepsFinalOutputShape()
+    {
+        var analysis = AnalyzeFile("rpt_BranchOperationalKpiComplex.sql");
+        Assert.Empty(analysis.Diagnostics);
+
+        var procedure = Assert.Single(analysis.Procedures);
+        Assert.Equal(32, procedure.OutputColumns.Count);
+        Assert.DoesNotContain(procedure.OutputColumns, column => column.Name == "TotalCount");
+
+        var names = procedure.OutputColumns.Select(column => column.Name).ToArray();
+        Assert.Equal("RegionId", names[0]);
+        Assert.Equal("RegionName", names[1]);
+        Assert.Equal("ReportEndDate", names[^1]);
+
+        var atmCount = Column(procedure, "AtmCount");
+        var channelMixSource = Assert.Single(atmCount.Sources, source => source.Alias == "cm" && source.Column == "AtmCount");
+        Assert.Equal("Temp", channelMixSource.SourceKind);
+        Assert.Equal("#ChannelMix", channelMixSource.Table);
+        Assert.Contains("SUM(CASE WHEN tr.ChannelCode = 'ATM' THEN 1 ELSE 0 END)", channelMixSource.Formula);
+        Assert.Contains(channelMixSource.DerivedSources, source =>
+            source.Alias == "tr" &&
+            source.ObjectName == "vkdb.BOA.OPR.BranchTransaction" &&
+            source.Column == "ChannelCode");
+    }
+
+    [Fact]
+    public void Analyze_CreditRiskIgnoresSelectIntoAndKeepsFinalOutputShape()
+    {
+        var analysis = AnalyzeFile("rpt_CreditPortfolioRiskComplex.sql");
+        Assert.Empty(analysis.Diagnostics);
+
+        var procedure = Assert.Single(analysis.Procedures);
+        Assert.Equal(22, procedure.OutputColumns.Count);
+        Assert.DoesNotContain(procedure.OutputColumns, column => column.Name == "LoanAccountId");
+        Assert.DoesNotContain(procedure.OutputColumns, column => column.Name == "RiskBucketCode");
+        Assert.DoesNotContain(procedure.OutputColumns, column => column.Name == "ProvisionRate");
+
+        var names = procedure.OutputColumns.Select(column => column.Name).ToArray();
+        Assert.Equal("BranchId", names[0]);
+        Assert.Equal("BranchName", names[1]);
+        Assert.Equal("ReportDate", names[^1]);
+
+        var requiredProvision = Column(procedure, "RequiredProvisionTL");
+        Assert.Contains(requiredProvision.Sources, source =>
+            source.Alias == "rb" &&
+            source.SourceKind == "Temp" &&
+            source.Table == "#RiskBucket" &&
+            source.Column == "ProvisionRate" &&
+            source.Formula is not null &&
+            source.Formula.Contains("rb.ProvisionRate * 1.25", StringComparison.OrdinalIgnoreCase) &&
+            source.DerivedSources.Any(derived => derived.Alias == "rb" && derived.Column == "CollateralCoverageRatio"));
+    }
+
+    [Fact]
     public void ConsoleReportFormatter_RendersReadableColumnDetails()
     {
         var analysis = AnalyzeFile("rpt_TreasuryFxLiquidityComplex.sql");

@@ -4,7 +4,9 @@ namespace SpLineageAnalyzer.Analysis;
 
 internal sealed class SelectAnalyzer(string sql, string defaultServer)
 {
-    public IReadOnlyList<ColumnOccurrence> Analyze(SelectStatement statement)
+    public IReadOnlyList<ColumnOccurrence> Analyze(
+        SelectStatement statement,
+        IReadOnlyDictionary<string, TableSource>? outerScope = null)
     {
         var query = FindQuerySpecification(statement.QueryExpression);
         if (query is null)
@@ -12,8 +14,84 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
             return Array.Empty<ColumnOccurrence>();
         }
 
-        var cteScope = BuildCteScope(statement);
+        var cteScope = BuildCteScope(statement, outerScope ?? EmptyScope);
         return AnalyzeQuerySpecification(query, $"select@line:{statement.StartLine}", cteScope);
+    }
+
+    public TableSource? BuildTempSourceFromSelectInto(
+        SelectStatement statement,
+        IReadOnlyDictionary<string, TableSource> outerScope)
+    {
+        if (statement.Into is null)
+        {
+            return null;
+        }
+
+        var name = SqlName.Format(statement.Into);
+        if (string.IsNullOrWhiteSpace(name) || !IsTempName(name))
+        {
+            return null;
+        }
+
+        var cteScope = BuildCteScope(statement, outerScope);
+        var columns = BuildDerivedColumns(statement.QueryExpression, cteScope);
+        return CreateTempSource(name, columns);
+    }
+
+    public TableSource? BuildTempSourceFromInsert(
+        InsertSpecification insert,
+        QueryExpression select,
+        IReadOnlyDictionary<string, TableSource> outerScope,
+        IReadOnlyList<string>? knownTargetColumns)
+    {
+        var name = TryGetTargetName(insert.Target);
+        if (string.IsNullOrWhiteSpace(name) || !IsTempName(name))
+        {
+            return null;
+        }
+
+        var targetColumns = insert.Columns.Count > 0
+            ? insert.Columns.Select(column => column.MultiPartIdentifier.Identifiers.LastOrDefault()?.Value)
+                .Where(column => !string.IsNullOrWhiteSpace(column))
+                .Cast<string>()
+                .ToArray()
+            : knownTargetColumns;
+
+        var columns = BuildDerivedColumns(select, outerScope, targetColumns);
+        return CreateTempSource(name, columns);
+    }
+
+    public TableSource? BuildTempSourceFromUpdate(
+        UpdateSpecification update,
+        IReadOnlyDictionary<string, TableSource> outerScope)
+    {
+        var scope = BuildScope(update.FromClause, outerScope);
+        var targetName = TryGetTargetName(update.Target);
+        if (string.IsNullOrWhiteSpace(targetName) ||
+            !scope.TryGetValue(targetName, out var targetSource) ||
+            targetSource.SourceKind is not "Temp")
+        {
+            return null;
+        }
+
+        var columns = new Dictionary<string, DerivedColumn>(targetSource.DerivedColumns, StringComparer.OrdinalIgnoreCase);
+        foreach (var assignment in update.SetClauses.OfType<AssignmentSetClause>())
+        {
+            if (assignment.Column?.MultiPartIdentifier?.Identifiers is not { Count: > 0 } identifiers ||
+                assignment.NewValue is null)
+            {
+                continue;
+            }
+
+            var columnName = identifiers[^1].Value;
+            columns[columnName] = new DerivedColumn(
+                columnName,
+                FragmentSql.GetText(assignment.NewValue, sql),
+                SourceCollector.Collect(assignment.NewValue, scope),
+                OperationCollector.Collect(assignment.NewValue));
+        }
+
+        return targetSource with { DerivedColumns = columns };
     }
 
     private IReadOnlyList<ColumnOccurrence> AnalyzeQuerySpecification(
@@ -55,13 +133,20 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
         QuerySpecification query,
         IReadOnlyDictionary<string, TableSource> outerScope)
     {
+        return BuildScope(query.FromClause, outerScope);
+    }
+
+    private Dictionary<string, TableSource> BuildScope(
+        FromClause? fromClause,
+        IReadOnlyDictionary<string, TableSource> outerScope)
+    {
         var scope = new Dictionary<string, TableSource>(outerScope, StringComparer.OrdinalIgnoreCase);
-        if (query.FromClause is null)
+        if (fromClause is null)
         {
             return scope;
         }
 
-        foreach (var tableReference in query.FromClause.TableReferences)
+        foreach (var tableReference in fromClause.TableReferences)
         {
             AddTableReference(tableReference, scope);
         }
@@ -101,9 +186,11 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
         }
     }
 
-    private Dictionary<string, TableSource> BuildCteScope(SelectStatement statement)
+    private Dictionary<string, TableSource> BuildCteScope(
+        SelectStatement statement,
+        IReadOnlyDictionary<string, TableSource> outerScope)
     {
-        var scope = new Dictionary<string, TableSource>(StringComparer.OrdinalIgnoreCase);
+        var scope = new Dictionary<string, TableSource>(outerScope, StringComparer.OrdinalIgnoreCase);
         var commonTableExpressions = statement.WithCtesAndXmlNamespaces?.CommonTableExpressions;
         if (commonTableExpressions is null)
         {
@@ -139,8 +226,7 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
         if (!string.IsNullOrWhiteSpace(alias))
         {
             if (!string.IsNullOrWhiteSpace(rawTableName) &&
-                scope.TryGetValue(rawTableName, out var scopedSource) &&
-                scopedSource.SourceKind is "CTE")
+                scope.TryGetValue(rawTableName, out var scopedSource))
             {
                 scope[alias] = scopedSource with { Alias = alias };
                 return;
@@ -298,6 +384,31 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
 
         return $"Expression{ordinal}";
     }
+
+    private TableSource CreateTempSource(string name, IReadOnlyDictionary<string, DerivedColumn> columns)
+    {
+        var objectName = SqlObjectNameParser.FromDisplayName(name, defaultServer);
+        return new TableSource(name, objectName, columns, "Temp");
+    }
+
+    private static string? TryGetTargetName(TableReference? target)
+    {
+        if (target is NamedTableReference named)
+        {
+            return SqlName.Format(named.SchemaObject);
+        }
+
+        return null;
+    }
+
+    private static bool IsTempName(string name)
+    {
+        var lastPart = name.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).LastOrDefault();
+        return lastPart?.StartsWith('#') == true;
+    }
+
+    private static IReadOnlyDictionary<string, TableSource> EmptyScope { get; } =
+        new Dictionary<string, TableSource>(StringComparer.OrdinalIgnoreCase);
 
     private sealed class FallbackTableReferenceVisitor(string sqlText, string fallbackServer) : TSqlFragmentVisitor
     {
