@@ -1,0 +1,1691 @@
+[
+  {
+    "file": "/Users/menesates/codex/vk/vyp/sp/rpt_LoanRediscountAdvanceInterim.sql",
+    "procedures": [
+      {
+        "name": "LNS.rpt_LoanRediscountAdvanceInterim",
+        "outputColumns": [
+          {
+            "name": "AccountNumber",
+            "formulas": [
+              "lra.AccountNumber"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "AccountNumber",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 24,
+                "formula": "lra.AccountNumber",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "AccountNumber",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 93,
+                "formula": "lra.AccountNumber",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "AccountNumber",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "AccountSuffix",
+            "formulas": [
+              "lra.AccountSuffix"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "AccountSuffix",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 25,
+                "formula": "lra.AccountSuffix",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "AccountSuffix",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 94,
+                "formula": "lra.AccountSuffix",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "AccountSuffix",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "AnnualCompoundProfitRate",
+            "formulas": [
+              "payb.AnnualCompoundProfitRate"
+            ],
+            "sources": [
+              {
+                "alias": "payb",
+                "table": "BOA.lns.ProjectPayBackPlan",
+                "column": "AnnualCompoundProfitRate",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 41,
+                "formula": "payb.AnnualCompoundProfitRate",
+                "sources": [
+                  {
+                    "alias": "payb",
+                    "table": "BOA.lns.ProjectPayBackPlan",
+                    "column": "AnnualCompoundProfitRate",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 102,
+                "formula": "payb.AnnualCompoundProfitRate",
+                "sources": [
+                  {
+                    "alias": "payb",
+                    "table": "BOA.lns.ProjectPayBackPlan",
+                    "column": "AnnualCompoundProfitRate",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "AnnualSimpleProfitRate",
+            "formulas": [
+              "payb.AnnualSimpleProfitRate"
+            ],
+            "sources": [
+              {
+                "alias": "payb",
+                "table": "BOA.lns.ProjectPayBackPlan",
+                "column": "AnnualSimpleProfitRate",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 40,
+                "formula": "payb.AnnualSimpleProfitRate",
+                "sources": [
+                  {
+                    "alias": "payb",
+                    "table": "BOA.lns.ProjectPayBackPlan",
+                    "column": "AnnualSimpleProfitRate",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 101,
+                "formula": "payb.AnnualSimpleProfitRate",
+                "sources": [
+                  {
+                    "alias": "payb",
+                    "table": "BOA.lns.ProjectPayBackPlan",
+                    "column": "AnnualSimpleProfitRate",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "BusinessKey",
+            "formulas": [
+              "lra.BusinessKey"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "BusinessKey",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 37,
+                "formula": "lra.BusinessKey",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "BusinessKey",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 109,
+                "formula": "lra.BusinessKey",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "BusinessKey",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "DailyRediscount",
+            "formulas": [
+              "(lra.RediscountAmount-ISNULL(lr.RediscountAmount,0))"
+            ],
+            "sources": [
+              {
+                "alias": "lr",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "RediscountAmount",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              },
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "RediscountAmount",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [
+              "ISNULL",
+              "Subtract"
+            ],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 54,
+                "formula": "(lra.RediscountAmount-ISNULL(lr.RediscountAmount,0))",
+                "sources": [
+                  {
+                    "alias": "lr",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmount",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmount",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "ISNULL",
+                  "Subtract"
+                ]
+              },
+              {
+                "branch": "select@line:92",
+                "line": 124,
+                "formula": "(lra.RediscountAmount-ISNULL(lr.RediscountAmount,0))",
+                "sources": [
+                  {
+                    "alias": "lr",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmount",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmount",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "ISNULL",
+                  "Subtract"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "DailyRediscountTL",
+            "formulas": [
+              "(lra.RediscountAmountTL-ISNULL(lr.RediscountAmountTL,0))"
+            ],
+            "sources": [
+              {
+                "alias": "lr",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "RediscountAmountTL",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              },
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "RediscountAmountTL",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [
+              "ISNULL",
+              "Subtract"
+            ],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 55,
+                "formula": "(lra.RediscountAmountTL-ISNULL(lr.RediscountAmountTL,0))",
+                "sources": [
+                  {
+                    "alias": "lr",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmountTL",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmountTL",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "ISNULL",
+                  "Subtract"
+                ]
+              },
+              {
+                "branch": "select@line:92",
+                "line": 125,
+                "formula": "(lra.RediscountAmountTL-ISNULL(lr.RediscountAmountTL,0))",
+                "sources": [
+                  {
+                    "alias": "lr",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmountTL",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmountTL",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "ISNULL",
+                  "Subtract"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "FecCode",
+            "formulas": [
+              "dvz.FecCode"
+            ],
+            "sources": [
+              {
+                "alias": "dvz",
+                "table": "boa.cor.fec",
+                "column": "FecCode",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 30,
+                "formula": "dvz.FecCode",
+                "sources": [
+                  {
+                    "alias": "dvz",
+                    "table": "boa.cor.fec",
+                    "column": "FecCode",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 99,
+                "formula": "dvz.FecCode",
+                "sources": [
+                  {
+                    "alias": "dvz",
+                    "table": "boa.cor.fec",
+                    "column": "FecCode",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "FundPool",
+            "formulas": [
+              "lra.FundPool"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "FundPool",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 31,
+                "formula": "lra.FundPool",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "FundPool",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 100,
+                "formula": "lra.FundPool",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "FundPool",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "FundPoolDesc",
+            "formulas": [
+              "p1.ParamDescription"
+            ],
+            "sources": [
+              {
+                "alias": "p1",
+                "table": "BOA.cor.Parameter",
+                "column": "ParamDescription",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 43,
+                "formula": "p1.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "p1",
+                    "table": "BOA.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 112,
+                "formula": "p1.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "p1",
+                    "table": "BOA.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "LedgerId",
+            "formulas": [
+              "lra.LedgerId"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "LedgerId",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 28,
+                "formula": "lra.LedgerId",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LedgerId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 97,
+                "formula": "lra.LedgerId",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LedgerId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "LoanMaturityType",
+            "formulas": [
+              "lra.LoanMaturityType"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "LoanMaturityType",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 26,
+                "formula": "lra.LoanMaturityType",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LoanMaturityType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 95,
+                "formula": "lra.LoanMaturityType",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LoanMaturityType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "LoanRediscountAdvanceInterimId",
+            "formulas": [
+              "lra.LoanRediscountAdvanceInterimId"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "LoanRediscountAdvanceInterimId",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 23,
+                "formula": "lra.LoanRediscountAdvanceInterimId",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LoanRediscountAdvanceInterimId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 92,
+                "formula": "lra.LoanRediscountAdvanceInterimId",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LoanRediscountAdvanceInterimId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "LoanType",
+            "formulas": [
+              "lra.LoanType"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "LoanType",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 27,
+                "formula": "lra.LoanType",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LoanType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 96,
+                "formula": "lra.LoanType",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "LoanType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "LoanTypeDesc",
+            "formulas": [
+              "p2.ParamDescription"
+            ],
+            "sources": [
+              {
+                "alias": "p2",
+                "table": "BOA.cor.Parameter",
+                "column": "ParamDescription",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 44,
+                "formula": "p2.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "p2",
+                    "table": "BOA.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 113,
+                "formula": "p2.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "p2",
+                    "table": "BOA.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "ParamDescription",
+            "formulas": [
+              "prwk.ParamDescription"
+            ],
+            "sources": [
+              {
+                "alias": "prwk",
+                "table": "boa.cor.Parameter",
+                "column": "ParamDescription",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 42,
+                "formula": "prwk.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "prwk",
+                    "table": "boa.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 103,
+                "formula": "prwk.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "prwk",
+                    "table": "boa.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "ProjectFECType",
+            "formulas": [
+              "lra.ProjectFECType"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "ProjectFECType",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 29,
+                "formula": "lra.ProjectFECType",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "ProjectFECType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 98,
+                "formula": "lra.ProjectFECType",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "ProjectFECType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "Rediscount2",
+            "formulas": [
+              "(CASE WHEN p.AgreementType = 3 \n         Then  mtxl.Rediscount2\n         Else  mtx.Rediscount2 END)"
+            ],
+            "sources": [
+              {
+                "alias": "mtx",
+                "table": null,
+                "column": "Rediscount2",
+                "unresolved": false,
+                "formula": "MAX(CASE WHEN ma.ColumnNo = 6 THEN ma.LedgerId ELSE 0 END)",
+                "derivedSources": [
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "ColumnNo",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "LedgerId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ]
+              },
+              {
+                "alias": "mtxl",
+                "table": null,
+                "column": "Rediscount2",
+                "unresolved": false,
+                "formula": "MAX(CASE WHEN ma.ColumnNo = 7 THEN ma.LedgerId ELSE 0 END)",
+                "derivedSources": [
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "ColumnNo",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "LedgerId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ]
+              },
+              {
+                "alias": "p",
+                "table": "boa.lns.Project",
+                "column": "AgreementType",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [
+              "CASE"
+            ],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 50,
+                "formula": "(CASE WHEN p.AgreementType = 3 \n         Then  mtxl.Rediscount2\n         Else  mtx.Rediscount2 END)",
+                "sources": [
+                  {
+                    "alias": "mtx",
+                    "table": null,
+                    "column": "Rediscount2",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 6 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "mtxl",
+                    "table": null,
+                    "column": "Rediscount2",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 7 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "p",
+                    "table": "boa.lns.Project",
+                    "column": "AgreementType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "CASE"
+                ]
+              },
+              {
+                "branch": "select@line:92",
+                "line": 120,
+                "formula": "(CASE WHEN p.AgreementType = 3 \n         Then  mtxl.Rediscount2\n         Else  mtx.Rediscount2 END)",
+                "sources": [
+                  {
+                    "alias": "mtx",
+                    "table": null,
+                    "column": "Rediscount2",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 6 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "mtxl",
+                    "table": null,
+                    "column": "Rediscount2",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 7 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "p",
+                    "table": "boa.lns.Project",
+                    "column": "AgreementType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "CASE"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Rediscount5",
+            "formulas": [
+              "(CASE WHEN p.AgreementType = 3 \n         Then  mtxl.Rediscount5\n         Else  mtx.Rediscount5 END)"
+            ],
+            "sources": [
+              {
+                "alias": "mtx",
+                "table": null,
+                "column": "Rediscount5",
+                "unresolved": false,
+                "formula": "MAX(CASE WHEN ma.ColumnNo = 1 THEN ma.LedgerId ELSE 0 END)",
+                "derivedSources": [
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "ColumnNo",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "LedgerId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ]
+              },
+              {
+                "alias": "mtxl",
+                "table": null,
+                "column": "Rediscount5",
+                "unresolved": false,
+                "formula": "MAX(CASE WHEN ma.ColumnNo = 10 THEN ma.LedgerId ELSE 0 END)",
+                "derivedSources": [
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "ColumnNo",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  },
+                  {
+                    "alias": "ma",
+                    "table": "boa.acc.MatrixAccounts",
+                    "column": "LedgerId",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ]
+              },
+              {
+                "alias": "p",
+                "table": "boa.lns.Project",
+                "column": "AgreementType",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [
+              "CASE"
+            ],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 46,
+                "formula": "(CASE WHEN p.AgreementType = 3 \n         Then  mtxl.Rediscount5\n         Else  mtx.Rediscount5 END)",
+                "sources": [
+                  {
+                    "alias": "mtx",
+                    "table": null,
+                    "column": "Rediscount5",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 1 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "mtxl",
+                    "table": null,
+                    "column": "Rediscount5",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 10 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "p",
+                    "table": "boa.lns.Project",
+                    "column": "AgreementType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "CASE"
+                ]
+              },
+              {
+                "branch": "select@line:92",
+                "line": 116,
+                "formula": "(CASE WHEN p.AgreementType = 3 \n         Then  mtxl.Rediscount5\n         Else  mtx.Rediscount5 END)",
+                "sources": [
+                  {
+                    "alias": "mtx",
+                    "table": null,
+                    "column": "Rediscount5",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 1 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "mtxl",
+                    "table": null,
+                    "column": "Rediscount5",
+                    "unresolved": false,
+                    "formula": "MAX(CASE WHEN ma.ColumnNo = 10 THEN ma.LedgerId ELSE 0 END)",
+                    "derivedSources": [
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "ColumnNo",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      },
+                      {
+                        "alias": "ma",
+                        "table": "boa.acc.MatrixAccounts",
+                        "column": "LedgerId",
+                        "unresolved": false,
+                        "formula": null,
+                        "derivedSources": []
+                      }
+                    ]
+                  },
+                  {
+                    "alias": "p",
+                    "table": "boa.lns.Project",
+                    "column": "AgreementType",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": [
+                  "CASE"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "RediscountAmount",
+            "formulas": [
+              "lra.RediscountAmount"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "RediscountAmount",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 32,
+                "formula": "lra.RediscountAmount",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmount",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 104,
+                "formula": "lra.RediscountAmount",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmount",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "RediscountAmountTL",
+            "formulas": [
+              "lra.RediscountAmountTL"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "RediscountAmountTL",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 33,
+                "formula": "lra.RediscountAmountTL",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmountTL",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 105,
+                "formula": "lra.RediscountAmountTL",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "RediscountAmountTL",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "SpecialPool",
+            "formulas": [
+              "prme.ParamDescription"
+            ],
+            "sources": [
+              {
+                "alias": "prme",
+                "table": "BOA.cor.Parameter",
+                "column": "ParamDescription",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 45,
+                "formula": "prme.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "prme",
+                    "table": "BOA.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 114,
+                "formula": "prme.ParamDescription",
+                "sources": [
+                  {
+                    "alias": "prme",
+                    "table": "BOA.cor.Parameter",
+                    "column": "ParamDescription",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "TranBranchId",
+            "formulas": [
+              "lra.TranBranch"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "TranBranch",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 34,
+                "formula": "lra.TranBranch",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "TranBranch",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 106,
+                "formula": "lra.TranBranch",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "TranBranch",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "TranBranchName",
+            "formulas": [
+              "b.Name"
+            ],
+            "sources": [
+              {
+                "alias": "b",
+                "table": "BOA.COR.Branch",
+                "column": "Name",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 35,
+                "formula": "b.Name",
+                "sources": [
+                  {
+                    "alias": "b",
+                    "table": "BOA.COR.Branch",
+                    "column": "Name",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 107,
+                "formula": "b.Name",
+                "sources": [
+                  {
+                    "alias": "b",
+                    "table": "BOA.COR.Branch",
+                    "column": "Name",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "TranDate",
+            "formulas": [
+              "lra.TranDate"
+            ],
+            "sources": [
+              {
+                "alias": "lra",
+                "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                "column": "TranDate",
+                "unresolved": false,
+                "formula": null,
+                "derivedSources": []
+              }
+            ],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 36,
+                "formula": "lra.TranDate",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "TranDate",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 108,
+                "formula": "lra.TranDate",
+                "sources": [
+                  {
+                    "alias": "lra",
+                    "table": "BOA.LNS.LoanRediscountAdvanceInterim",
+                    "column": "TranDate",
+                    "unresolved": false,
+                    "formula": null,
+                    "derivedSources": []
+                  }
+                ],
+                "operations": []
+              }
+            ]
+          },
+          {
+            "name": "TranReference",
+            "formulas": [
+              "null"
+            ],
+            "sources": [],
+            "operations": [],
+            "branches": [
+              {
+                "branch": "select@line:23",
+                "line": 39,
+                "formula": "null",
+                "sources": [],
+                "operations": []
+              },
+              {
+                "branch": "select@line:92",
+                "line": 111,
+                "formula": "null",
+                "sources": [],
+                "operations": []
+              }
+            ]
+          }
+        ],
+        "diagnostics": []
+      }
+    ],
+    "diagnostics": []
+  }
+]

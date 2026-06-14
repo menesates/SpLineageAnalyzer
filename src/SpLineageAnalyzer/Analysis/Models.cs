@@ -1,0 +1,51 @@
+namespace SpLineageAnalyzer.Analysis;
+
+public sealed record SqlFileAnalysis(
+    string File,
+    IReadOnlyList<ProcedureAnalysis> Procedures,
+    IReadOnlyList<AnalysisDiagnostic> Diagnostics);
+
+public sealed record ProcedureAnalysis(
+    string Name,
+    IReadOnlyList<OutputColumnAnalysis> OutputColumns,
+    IReadOnlyList<AnalysisDiagnostic> Diagnostics);
+
+public sealed record OutputColumnAnalysis(
+    string Name,
+    IReadOnlyList<string> Formulas,
+    IReadOnlyList<SourceReference> Sources,
+    IReadOnlyList<string> Operations,
+    IReadOnlyList<BranchColumnAnalysis> Branches);
+
+public sealed record BranchColumnAnalysis(
+    string Branch,
+    int Line,
+    string Formula,
+    IReadOnlyList<SourceReference> Sources,
+    IReadOnlyList<string> Operations);
+
+public sealed record SourceReference(
+    string Alias,
+    string? Table,
+    string Column,
+    bool Unresolved,
+    string? Formula,
+    IReadOnlyList<SourceReference> DerivedSources);
+
+public sealed record AnalysisDiagnostic(string Severity, string Message, int? Line = null, int? Column = null);
+
+internal sealed record ColumnOccurrence(
+    string Name,
+    string Branch,
+    int Line,
+    string Formula,
+    IReadOnlyList<SourceReference> Sources,
+    IReadOnlyList<string> Operations);
+
+internal sealed record TableSource(string Alias, string? Table, IReadOnlyDictionary<string, DerivedColumn> DerivedColumns);
+
+internal sealed record DerivedColumn(
+    string Name,
+    string Formula,
+    IReadOnlyList<SourceReference> Sources,
+    IReadOnlyList<string> Operations);
