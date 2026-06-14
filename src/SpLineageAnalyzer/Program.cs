@@ -22,6 +22,7 @@ var emitJson = options.Format is OutputFormat.Json or OutputFormat.Both;
 var emitMarkdown = options.Format is OutputFormat.Markdown or OutputFormat.Both;
 var json = emitJson ? JsonSerializer.Serialize(analyses, jsonOptions) : null;
 var markdown = emitMarkdown ? MarkdownFormatter.Format(analyses) : null;
+var consoleReport = options.NoConsole ? null : ConsoleReportFormatter.Format(analyses);
 
 if (string.IsNullOrWhiteSpace(options.OutputPath))
 {
@@ -43,6 +44,16 @@ if (string.IsNullOrWhiteSpace(options.OutputPath))
 else
 {
     WriteOutput(options, json, markdown);
+}
+
+if (consoleReport is not null)
+{
+    if (string.IsNullOrWhiteSpace(options.OutputPath) && (json is not null || markdown is not null))
+    {
+        Console.WriteLine();
+    }
+
+    Console.WriteLine(consoleReport);
 }
 
 static IReadOnlyList<string> ResolveInputFiles(string inputPath)
@@ -85,13 +96,14 @@ static void WriteOutput(CliOptions options, string? json, string? markdown)
     File.WriteAllText(outputPath, json ?? markdown ?? string.Empty);
 }
 
-internal sealed record CliOptions(string InputPath, OutputFormat Format, string? OutputPath)
+internal sealed record CliOptions(string InputPath, OutputFormat Format, string? OutputPath, bool NoConsole)
 {
     public static CliOptions Parse(string[] args)
     {
         var input = "sp";
         var format = OutputFormat.Json;
         string? output = null;
+        var noConsole = false;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -106,6 +118,9 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
                 case "--output":
                     output = RequireValue(args, ref i, "--output");
                     break;
+                case "--no-console":
+                    noConsole = true;
+                    break;
                 case "--help":
                 case "-h":
                     PrintHelpAndExit();
@@ -115,7 +130,7 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
             }
         }
 
-        return new CliOptions(input, format, output);
+        return new CliOptions(input, format, output, noConsole);
     }
 
     private static string RequireValue(string[] args, ref int index, string name)
@@ -140,7 +155,7 @@ internal sealed record CliOptions(string InputPath, OutputFormat Format, string?
 
     private static void PrintHelpAndExit()
     {
-        Console.WriteLine("Usage: SpLineageAnalyzer [--input <file-or-dir>] [--format json|markdown|both] [--output <file-or-dir>]");
+        Console.WriteLine("Usage: SpLineageAnalyzer [--input <file-or-dir>] [--format json|markdown|both] [--output <file-or-dir>] [--no-console]");
         Environment.Exit(0);
     }
 }

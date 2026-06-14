@@ -22,6 +22,11 @@ internal sealed class SourceCollector(IReadOnlyDictionary<string, TableSource> s
 
     public override void ExplicitVisit(ColumnReferenceExpression node)
     {
+        if (node.MultiPartIdentifier?.Identifiers is null)
+        {
+            return;
+        }
+
         var parts = node.MultiPartIdentifier.Identifiers.Select(identifier => identifier.Value).ToArray();
         if (parts.Length == 0)
         {
@@ -30,6 +35,11 @@ internal sealed class SourceCollector(IReadOnlyDictionary<string, TableSource> s
 
         if (parts.Length == 1)
         {
+            if (IsDatePart(parts[0]))
+            {
+                return;
+            }
+
             _sources.Add(new SourceReference(
                 "",
                 null,
@@ -74,4 +84,17 @@ internal sealed class SourceCollector(IReadOnlyDictionary<string, TableSource> s
             null,
             Array.Empty<SourceReference>()));
     }
+
+    private static bool IsDatePart(string value) =>
+        value.Equals("YEAR", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("YY", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("YYYY", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("QUARTER", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("MONTH", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("MM", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("DAY", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("DD", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("HOUR", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("MINUTE", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("SECOND", StringComparison.OrdinalIgnoreCase);
 }

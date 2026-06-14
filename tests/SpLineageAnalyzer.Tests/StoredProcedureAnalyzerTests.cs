@@ -1,4 +1,5 @@
 using SpLineageAnalyzer.Analysis;
+using SpLineageAnalyzer.Output;
 using Xunit;
 
 namespace SpLineageAnalyzer.Tests;
@@ -79,15 +80,65 @@ public sealed class StoredProcedureAnalyzerTests
             source.Column == "ColumnNo");
     }
 
+    [Fact]
+    public void Analyze_TreasuryCteProcedureResolvesFinalOutputColumns()
+    {
+        var analysis = AnalyzeFile("rpt_TreasuryFxLiquidityComplex.sql");
+        Assert.Empty(analysis.Diagnostics);
+
+        var procedure = Assert.Single(analysis.Procedures);
+        Assert.Equal("RPT.rpt_TreasuryFxLiquidityComplex", procedure.Name);
+        Assert.NotEmpty(procedure.OutputColumns);
+
+        var projectedClosingPosition = Column(procedure, "ProjectedClosingPosition");
+        Assert.Contains(projectedClosingPosition.Sources, source => source.Alias == "pb" && source.Column == "CurrentPositionAmount");
+        Assert.Contains(projectedClosingPosition.Sources, source => source.Alias == "af" && source.Column == "TotalForwardCashFlow");
+
+        var liquiditySurvivalRatio = Column(procedure, "LiquiditySurvivalRatio");
+        Assert.Contains(liquiditySurvivalRatio.Sources, source => source.Alias == "stress" && source.Column == "StressedOutflowAmount");
+
+        var limitBreachFlag = Column(procedure, "LimitBreachFlag");
+        Assert.Contains(limitBreachFlag.Sources, source => source.Alias == "limitDef" && source.Column == "PositionLimitAmount");
+    }
+
+    [Fact]
+    public void ConsoleReportFormatter_RendersReadableColumnDetails()
+    {
+        var analysis = AnalyzeFile("rpt_TreasuryFxLiquidityComplex.sql");
+        var report = ConsoleReportFormatter.Format(new[] { analysis });
+
+        Assert.Contains("Stored Procedure Lineage Report", report);
+        Assert.Contains("FILE: rpt_TreasuryFxLiquidityComplex.sql", report);
+        Assert.Contains("PROCEDURE: RPT.rpt_TreasuryFxLiquidityComplex", report);
+        Assert.Contains("[", report);
+        Assert.Contains("ProjectedClosingPosition", report);
+        Assert.Contains("Formula:", report);
+        Assert.Contains("Sources:", report);
+        Assert.Contains("Operations:", report);
+        Assert.Contains("pb.CurrentPositionAmount -> CTE: PositionBase", report);
+        Assert.Contains("af.TotalForwardCashFlow -> CTE: AggregatedFlow", report);
+    }
+
     private static ProcedureAnalysis AnalyzeSample()
     {
         var root = FindRepositoryRoot();
         var file = Path.Combine(root, "sp", "rpt_LoanRediscountAdvanceInterim.sql");
-        var sql = File.ReadAllText(file);
-        var analysis = new StoredProcedureAnalyzer().Analyze(file, sql);
+        var analysis = AnalyzePath(file);
 
         Assert.Empty(analysis.Diagnostics);
         return Assert.Single(analysis.Procedures);
+    }
+
+    private static SqlFileAnalysis AnalyzeFile(string fileName)
+    {
+        var root = FindRepositoryRoot();
+        return AnalyzePath(Path.Combine(root, "sp", fileName));
+    }
+
+    private static SqlFileAnalysis AnalyzePath(string file)
+    {
+        var sql = File.ReadAllText(file);
+        return new StoredProcedureAnalyzer().Analyze(file, sql);
     }
 
     private static OutputColumnAnalysis Column(ProcedureAnalysis procedure, string name) =>

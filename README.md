@@ -49,7 +49,7 @@ dotnet test SpLineageAnalyzer.sln
 
 ## Uygulamayi Calistirma
 
-Varsayilan olarak `sp/` dizinindeki tum `.sql` dosyalari analiz edilir ve JSON cikti terminale yazilir:
+Varsayilan olarak `sp/` dizinindeki tum `.sql` dosyalari analiz edilir. Uygulama secilen JSON/Markdown ciktisini korur ve ek olarak terminalde kolay okunabilir bir console raporu gosterir:
 
 ```bash
 dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj
@@ -85,11 +85,17 @@ Sonuclari bir dizine yazmak icin:
 dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format both --output output
 ```
 
-Bu komut su dosyalari uretir:
+Bu komut su dosyalari uretir ve ayni analiz sonucunu terminalde okunabilir rapor olarak da gosterir:
 
 ```text
 output/lineage.json
 output/lineage.md
+```
+
+Sadece dosya uretip terminalde okunabilir raporu kapatmak icin:
+
+```bash
+dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --format both --output output --no-console
 ```
 
 ## CLI Parametreleri
@@ -98,12 +104,13 @@ output/lineage.md
 --input <file-or-dir>       Analiz edilecek SQL dosyasi veya dizin. Varsayilan: sp
 --format json|markdown|both Cikti formati. Varsayilan: json
 --output <file-or-dir>      Cikti yolu. Verilmezse terminale yazar.
+--no-console                Okunabilir console raporunu kapatir.
 --help                      Yardim metnini gosterir.
 ```
 
 ## Cikti Icerigi
 
-JSON ciktida her procedure icin output kolonlari merge edilmis olarak listelenir. Her kolon icin su bilgiler bulunur:
+JSON, Markdown ve console raporunda her procedure icin output kolonlari merge edilmis olarak listelenir. Her kolon icin su bilgiler bulunur:
 
 - Output kolon adi
 - Kolonu ureten SQL formulu

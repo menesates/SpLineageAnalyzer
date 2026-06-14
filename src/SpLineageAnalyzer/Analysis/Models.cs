@@ -42,7 +42,11 @@ internal sealed record ColumnOccurrence(
     IReadOnlyList<SourceReference> Sources,
     IReadOnlyList<string> Operations);
 
-internal sealed record TableSource(string Alias, string? Table, IReadOnlyDictionary<string, DerivedColumn> DerivedColumns);
+internal sealed record TableSource(
+    string Alias,
+    string? Table,
+    IReadOnlyDictionary<string, DerivedColumn> DerivedColumns,
+    string SourceKind = "Table");
 
 internal sealed record DerivedColumn(
     string Name,
