@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SP Lineage Table</title>
+    <link rel="stylesheet" href="/tools/lineage-viewer/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Stored Procedure Lineage</p>
+        <h1>SP Lineage Table</h1>
+      </div>
+      <div class="top-actions">
+        <a class="top-link" href="/">Genel viewer</a>
+        <span id="loadStatus" class="status">Yukleniyor...</span>
+        <button id="reloadButton" class="icon-button" type="button" title="JSON dosyasini yeniden yukle" aria-label="JSON dosyasini yeniden yukle">
+          ↻
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="errorPanel" class="error-panel hidden" role="alert"></section>
+
+      <section class="lineage-layout">
+        <aside class="panel procedure-panel">
+          <div class="panel-heading">
+            <h2>Stored Procedures</h2>
+            <span id="procedureCount" class="count-pill">0</span>
+          </div>
+          <label class="field">
+            <span>SP ara</span>
+            <input id="procedureSearch" type="search" autocomplete="off" placeholder="RPT.rpt..." />
+          </label>
+          <div id="procedureList" class="procedure-list"></div>
+        </aside>
+
+        <section class="panel lineage-table-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="selectedProcedureTitle">Procedure secin</h2>
+              <p id="selectedProcedureFile" class="muted"></p>
+            </div>
+            <span id="columnCount" class="count-pill">0 kolon</span>
+          </div>
+
+          <div class="filters single-filter">
+            <label class="field">
+              <span>Kolon, formul, tablo veya source kolon ara</span>
+              <input id="lineageSearch" type="search" autocomplete="off" placeholder="CustomerNumber, CASE, vkdb.BOA.CUS.Customer..." />
+            </label>
+          </div>
+
+          <div class="lineage-table-wrap">
+            <table class="lineage-table">
+              <thead>
+                <tr>
+                  <th>Output Kolon</th>
+                  <th>Formul</th>
+                  <th>Kullanilan Tablolar</th>
+                  <th>Kullanilan Kolonlar</th>
+                  <th>Satir</th>
+                </tr>
+              </thead>
+              <tbody id="lineageTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/tools/lineage-viewer/sp-table.js" type="module"></script>
+  </body>
+</html>

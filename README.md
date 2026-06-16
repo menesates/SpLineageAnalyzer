@@ -98,6 +98,29 @@ Sadece dosya uretip terminalde okunabilir raporu kapatmak icin:
 dotnet run --project src/SpLineageAnalyzer/SpLineageAnalyzer.csproj -- --input sp --server vkdb --format both --output output --no-console
 ```
 
+## Web Sayfalari
+
+`output/lineage.json` dosyasini tarayicida incelemek icin once proje kok dizininde lokal viewer sunucusunu baslatin:
+
+```bash
+scripts/view-lineage
+```
+
+Komut varsayilan olarak `127.0.0.1:5177` adresinde calisir. Farkli port kullanmak isterseniz:
+
+```bash
+scripts/view-lineage --port=5180
+```
+
+Sunucu calisirken tarayicida su sayfalari acabilirsiniz:
+
+| Sayfa | Adres | Aciklama |
+|---|---|---|
+| Genel JSON viewer | `http://127.0.0.1:5177/` | Ozet metrikler, procedure listesi, kolon detaylari, source turleri ve ham JSON gorunumu. |
+| SP lineage tablosu | `http://127.0.0.1:5177/tools/lineage-viewer/sp-table.html` | Secilen SP icin output kolon, formul, kullanilan tablo/kolon ve output satir bilgisi. |
+
+Sayfalar her acildiginda veya yenile butonuna basildiginda `output/lineage.json` dosyasinin guncel halini okur. Bu nedenle analiz ciktisini yeniden urettikten sonra tarayiciyi yenilemeniz yeterlidir.
+
 ## CLI Parametreleri
 
 ```text

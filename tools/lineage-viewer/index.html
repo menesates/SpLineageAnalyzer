@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lineage JSON Viewer</title>
+    <link rel="stylesheet" href="/tools/lineage-viewer/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Stored Procedure Lineage</p>
+        <h1>Lineage JSON Viewer</h1>
+      </div>
+      <div class="top-actions">
+        <span id="loadStatus" class="status">Yukleniyor...</span>
+        <button id="reloadButton" class="icon-button" type="button" title="JSON dosyasini yeniden yukle" aria-label="JSON dosyasini yeniden yukle">
+          ↻
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="errorPanel" class="error-panel hidden" role="alert"></section>
+
+      <section class="summary-grid" aria-label="Ozet metrikler">
+        <div class="metric"><span>Dosya</span><strong id="metricFiles">-</strong></div>
+        <div class="metric"><span>Procedure</span><strong id="metricProcedures">-</strong></div>
+        <div class="metric"><span>Kolon</span><strong id="metricColumns">-</strong></div>
+        <div class="metric"><span>Source</span><strong id="metricSources">-</strong></div>
+        <div class="metric"><span>Branch</span><strong id="metricBranches">-</strong></div>
+        <div class="metric"><span>Operation</span><strong id="metricOperations">-</strong></div>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel procedure-panel">
+          <div class="panel-heading">
+            <h2>Procedures</h2>
+            <span id="procedureCount" class="count-pill">0</span>
+          </div>
+          <label class="field">
+            <span>Procedure ara</span>
+            <input id="procedureSearch" type="search" autocomplete="off" placeholder="RPT.rpt..." />
+          </label>
+          <div id="procedureList" class="procedure-list"></div>
+        </aside>
+
+        <section class="panel table-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="selectedProcedureTitle">Procedure secin</h2>
+              <p id="selectedProcedureFile" class="muted"></p>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Gorunum">
+              <button id="tableTab" class="tab active" type="button">Kolonlar</button>
+              <button id="rawTab" class="tab" type="button">Ham JSON</button>
+            </div>
+          </div>
+
+          <div id="tableView">
+            <div class="filters">
+              <label class="field">
+                <span>Kolon/formul/source ara</span>
+                <input id="columnSearch" type="search" autocomplete="off" placeholder="CustomerNumber, SUM, vkdb..." />
+              </label>
+              <label class="field compact">
+                <span>Source turu</span>
+                <select id="sourceKindFilter">
+                  <option value="">Hepsi</option>
+                </select>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kolon</th>
+                    <th>Formul</th>
+                    <th>Source</th>
+                    <th>Ops</th>
+                    <th>Branch</th>
+                  </tr>
+                </thead>
+                <tbody id="columnTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="rawView" class="raw-view hidden">
+            <pre id="rawJson"></pre>
+          </div>
+        </section>
+
+        <aside class="panel detail-panel">
+          <div class="panel-heading">
+            <h2>Detay</h2>
+          </div>
+          <div id="detailContent" class="detail-content empty-state">
+            Bir kolon secildiginde formul, kaynak zinciri ve branch detaylari burada gorunur.
+          </div>
+        </aside>
+      </section>
+
+      <section class="analytics-grid">
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>Source Turleri</h2>
+          </div>
+          <div id="kindChart" class="bar-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>En Cok Referanslanan Objeler</h2>
+          </div>
+          <div id="topObjects" class="object-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/tools/lineage-viewer/app.js" type="module"></script>
+  </body>
+</html>
