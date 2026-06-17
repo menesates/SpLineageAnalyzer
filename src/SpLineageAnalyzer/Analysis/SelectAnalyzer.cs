@@ -84,11 +84,16 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
             }
 
             var columnName = identifiers[^1].Value;
+            var formula = FragmentSql.GetText(assignment.NewValue, sql);
+            var sources = SourceCollector.Collect(assignment.NewValue, scope, defaultServer);
+            var operations = OperationCollector.Collect(assignment.NewValue);
             columns[columnName] = new DerivedColumn(
                 columnName,
-                FragmentSql.GetText(assignment.NewValue, sql),
-                SourceCollector.Collect(assignment.NewValue, scope),
-                OperationCollector.Collect(assignment.NewValue));
+                formula,
+                assignment.StartLine,
+                sources,
+                operations,
+                new[] { new DerivedColumnBranch(assignment.StartLine, formula, sources, operations) });
         }
 
         return targetSource with { DerivedColumns = columns };
@@ -105,6 +110,12 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
 
         foreach (var element in query.SelectElements)
         {
+            if (element is SelectStarExpression star)
+            {
+                results.AddRange(ExpandStarExpression(star, query, scope, branch));
+                continue;
+            }
+
             if (element is not SelectScalarExpression scalar)
             {
                 continue;
@@ -113,7 +124,7 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
             var name = InferColumnName(scalar, ordinal);
             var expression = scalar.Expression;
             var formula = FragmentSql.GetText(expression, sql);
-            var sources = SourceCollector.Collect(expression, scope);
+            var sources = SourceCollector.Collect(expression, scope, defaultServer);
             var operations = OperationCollector.Collect(expression);
 
             results.Add(new ColumnOccurrence(
@@ -128,6 +139,134 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
 
         return results;
     }
+
+    private IReadOnlyList<ColumnOccurrence> ExpandStarExpression(
+        SelectStarExpression star,
+        QuerySpecification query,
+        IReadOnlyDictionary<string, TableSource> scope,
+        string branch)
+    {
+        var sources = ResolveStarSources(star, query, scope);
+        if (sources.Count == 0)
+        {
+            return Array.Empty<ColumnOccurrence>();
+        }
+
+        return sources
+            .SelectMany(source => source.DerivedColumns.Values.SelectMany(column =>
+            {
+                var columnBranches = column.Branches.Count > 0
+                    ? column.Branches
+                    : new[] { new DerivedColumnBranch(column.Line, column.Formula, column.Sources, column.Operations) };
+
+                return columnBranches.Select(columnBranch => new ColumnOccurrence(
+                    column.Name,
+                    branch,
+                    columnBranch.Line > 0 ? columnBranch.Line : star.StartLine,
+                    columnBranch.Formula,
+                    columnBranch.Sources.Count > 0 ? columnBranch.Sources : new[] { CreateSourceReference(source, column) },
+                    columnBranch.Operations));
+            }))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<TableSource> ResolveStarSources(
+        SelectStarExpression star,
+        QuerySpecification query,
+        IReadOnlyDictionary<string, TableSource> scope)
+    {
+        var qualifier = star.Qualifier?.Identifiers.LastOrDefault()?.Value;
+        if (!string.IsNullOrWhiteSpace(qualifier))
+        {
+            return scope.TryGetValue(qualifier, out var qualifiedSource)
+                ? new[] { qualifiedSource }
+                : Array.Empty<TableSource>();
+        }
+
+        var fromSources = CollectFromSources(query.FromClause, scope);
+        return fromSources.Count > 0
+            ? fromSources
+            : scope.Values
+                .Where(source => source.DerivedColumns.Count > 0)
+                .DistinctBy(source => source.Alias, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+    }
+
+    private static IReadOnlyList<TableSource> CollectFromSources(
+        FromClause? fromClause,
+        IReadOnlyDictionary<string, TableSource> scope)
+    {
+        if (fromClause is null)
+        {
+            return Array.Empty<TableSource>();
+        }
+
+        var sources = new List<TableSource>();
+        foreach (var reference in fromClause.TableReferences)
+        {
+            CollectFromSources(reference, scope, sources);
+        }
+
+        return sources
+            .Where(source => source.DerivedColumns.Count > 0)
+            .DistinctBy(source => source.Alias, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static void CollectFromSources(
+        TableReference reference,
+        IReadOnlyDictionary<string, TableSource> scope,
+        List<TableSource> sources)
+    {
+        switch (reference)
+        {
+            case NamedTableReference named:
+                var alias = named.Alias?.Value;
+                if (!string.IsNullOrWhiteSpace(alias) && scope.TryGetValue(alias, out var aliasSource))
+                {
+                    sources.Add(aliasSource);
+                    return;
+                }
+
+                var rawName = SqlName.Format(named.SchemaObject);
+                if (!string.IsNullOrWhiteSpace(rawName) && scope.TryGetValue(rawName, out var rawSource))
+                {
+                    sources.Add(rawSource);
+                }
+                break;
+            case QueryDerivedTable derived:
+                if (!string.IsNullOrWhiteSpace(derived.Alias?.Value) && scope.TryGetValue(derived.Alias.Value, out var derivedSource))
+                {
+                    sources.Add(derivedSource);
+                }
+                break;
+            case QualifiedJoin qualifiedJoin:
+                CollectFromSources(qualifiedJoin.FirstTableReference, scope, sources);
+                CollectFromSources(qualifiedJoin.SecondTableReference, scope, sources);
+                break;
+            case UnqualifiedJoin unqualifiedJoin:
+                CollectFromSources(unqualifiedJoin.FirstTableReference, scope, sources);
+                CollectFromSources(unqualifiedJoin.SecondTableReference, scope, sources);
+                break;
+            case JoinParenthesisTableReference parenthesizedJoin:
+                CollectFromSources(parenthesizedJoin.Join, scope, sources);
+                break;
+        }
+    }
+
+    private static SourceReference CreateSourceReference(TableSource source, DerivedColumn column) =>
+        new(
+            source.Alias,
+            source.ObjectName.DisplayName,
+            source.ObjectName.Server,
+            source.ObjectName.Database,
+            source.ObjectName.Schema,
+            source.ObjectName.Table,
+            source.SourceKind,
+            column.Name,
+            false,
+            column.Formula,
+            column.Sources);
 
     private Dictionary<string, TableSource> BuildScope(
         QuerySpecification query,
@@ -276,8 +415,10 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
                 merged[name] = new DerivedColumn(
                     name,
                     MergeText(existing.Formula, column.Formula),
+                    existing.Line > 0 ? existing.Line : column.Line,
                     MergeSources(existing.Sources.Concat(column.Sources)),
-                    MergeTextValues(existing.Operations.Concat(column.Operations)));
+                    MergeTextValues(existing.Operations.Concat(column.Operations)),
+                    existing.Branches.Concat(column.Branches).ToArray());
             }
         }
 
@@ -319,11 +460,16 @@ internal sealed class SelectAnalyzer(string sql, string defaultServer)
             }
 
             var name = InferColumnName(scalar, ordinal);
+            var formula = FragmentSql.GetText(scalar.Expression, sql);
+            var sources = SourceCollector.Collect(scalar.Expression, derivedScope, defaultServer);
+            var operations = OperationCollector.Collect(scalar.Expression);
             columns.Add(new DerivedColumn(
                 name,
-                FragmentSql.GetText(scalar.Expression, sql),
-                SourceCollector.Collect(scalar.Expression, derivedScope),
-                OperationCollector.Collect(scalar.Expression)));
+                formula,
+                scalar.StartLine,
+                sources,
+                operations,
+                new[] { new DerivedColumnBranch(scalar.StartLine, formula, sources, operations) }));
             ordinal++;
         }
 

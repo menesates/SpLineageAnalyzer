@@ -262,15 +262,75 @@ public sealed class StoredProcedureAnalyzer
 
         private void AddTempSource(TableSource? source)
         {
-            if (source is null || string.IsNullOrWhiteSpace(source.ObjectName.Table))
+            var tableName = source?.ObjectName.Table;
+            if (source is null || string.IsNullOrWhiteSpace(tableName))
             {
                 return;
             }
 
-            _tempSources[source.ObjectName.Table] = source;
+            if (_tempSources.TryGetValue(tableName, out var existing) &&
+                existing.SourceKind == "Temp" &&
+                source.SourceKind == "Temp")
+            {
+                source = MergeTempSources(existing, source);
+            }
+
+            _tempSources[tableName] = source;
             _tempSources[source.Alias] = source;
-            _tempColumns[source.ObjectName.Table] = source.DerivedColumns.Keys.ToArray();
+            _tempColumns[tableName] = source.DerivedColumns.Keys.ToArray();
         }
+
+        private static TableSource MergeTempSources(TableSource existing, TableSource incoming)
+        {
+            var columns = new Dictionary<string, DerivedColumn>(existing.DerivedColumns, StringComparer.OrdinalIgnoreCase);
+            foreach (var (name, column) in incoming.DerivedColumns)
+            {
+                if (!columns.TryGetValue(name, out var existingColumn))
+                {
+                    columns[name] = column;
+                    continue;
+                }
+
+                columns[name] = new DerivedColumn(
+                    name,
+                    MergeText(existingColumn.Formula, column.Formula),
+                    existingColumn.Line > 0 ? existingColumn.Line : column.Line,
+                    MergeSources(existingColumn.Sources.Concat(column.Sources)),
+                    MergeTextValues(existingColumn.Operations.Concat(column.Operations)),
+                    existingColumn.Branches.Concat(column.Branches).ToArray());
+            }
+
+            return incoming with { DerivedColumns = columns };
+        }
+
+        private static string MergeText(string left, string right)
+        {
+            if (string.Equals(left, right, StringComparison.OrdinalIgnoreCase))
+            {
+                return left;
+            }
+
+            return $"{left} UNION/OR {right}";
+        }
+
+        private static IReadOnlyList<string> MergeTextValues(IEnumerable<string> values) =>
+            values
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+        private static IReadOnlyList<SourceReference> MergeSources(IEnumerable<SourceReference> sources) =>
+            sources
+                .GroupBy(source => $"{source.Alias}|{source.ObjectName}|{source.Column}|{source.Formula}", StringComparer.OrdinalIgnoreCase)
+                .Select(group =>
+                {
+                    var first = group.First();
+                    return first with { DerivedSources = MergeSources(group.SelectMany(item => item.DerivedSources)) };
+                })
+                .OrderBy(source => source.Alias, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(source => source.Column, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
         private static string? TryGetTargetName(TableReference? target)
         {

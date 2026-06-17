@@ -66,5 +66,13 @@ internal sealed record SqlObjectName(
 internal sealed record DerivedColumn(
     string Name,
     string Formula,
+    int Line,
+    IReadOnlyList<SourceReference> Sources,
+    IReadOnlyList<string> Operations,
+    IReadOnlyList<DerivedColumnBranch> Branches);
+
+internal sealed record DerivedColumnBranch(
+    int Line,
+    string Formula,
     IReadOnlyList<SourceReference> Sources,
     IReadOnlyList<string> Operations);
